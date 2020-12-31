@@ -1,155 +1,166 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.IOException;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
+import java.util.HashMap;
 import java.util.ArrayList;
-
-import org.json.simple.JSONObject;
-import org.json.simple.JSONValue;
-import org.json.simple.JSONArray;
 
 public class WordRevision {
     public static void main(String[] args) {
-        new welcome();
+        new welcomeScreen(new JFrame());
     }
 }
 
-abstract class GUIStage{
+abstract class GUIStage implements ActionListener {
     JFrame window;
-    GUIStage (String name, Dimension size){
-        window = new JFrame();
-        window.setTitle(name);
+
+    GUIStage (JFrame win, Dimension size, String title){
+        window = win;
+        window.setTitle(title);
         window.setSize(size);
-        setWindow();
+        initialise();
+        update();
+
+    }
+
+    abstract void initialise();
+
+    void update(){
+        window.revalidate();
+        window.repaint();
         window.setVisible(true);
     }
-    abstract void setWindow();
-
-    void addComponents(Component... components){
-        for (Component comp : components){
-            window.add(comp);
-        }
-    }
 }
 
-class welcome extends GUIStage{
-    welcome() {
-        super("Welcome to Revision.", new Dimension(600,600));
+class welcomeScreen extends GUIStage{
+    JButton play;
+    JButton credits;
+    JLabel text;
+    JPanel buttons;
+
+
+    welcomeScreen(JFrame win) {
+        super(win, new Dimension(300,300), "Welcome");
     }
 
     @Override
-    void setWindow() {
-        JLabel text = new JLabel("Welcome to the Revision Program.");
-        JButton play = new JButton("Start a new revision session");
-        play.addActionListener(new ActionListener(){
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                window.dispose();
-                new play("lol");
-            }
-        });
-        JButton credits = new JButton("Go to the credits");
-        credits.addActionListener(new ActionListener(){
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                window.dispose();
-                new credits();
-            }
-        });
-        addComponents(text,play,credits);
-        window.setLayout(new GridLayout(3,3));
-    }
-}
+    void initialise() {
+        buttons = new JPanel();
 
-class credits extends GUIStage{
-    credits(){
-        super("Credits", new Dimension(300,300));
-    }
+        play = new JButton("Start revising");
+        credits = new JButton("credits");
+        text = new JLabel("welcome to German revision");
 
-    @Override
-    void setWindow() {
-        JLabel text = new JLabel("Made by Oliver Killane when he wanted to do german revision but was too bored to, you know, revise german.");
+        play.addActionListener(this);
+        credits.addActionListener(this);
 
-        JButton welret = new JButton("return to welcome screen");
-        welret.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                window.dispose();
-                new welcome();
-            }
-        });
+        buttons.setLayout(new GridLayout(1,2));
+        buttons.add(play, 0);
+        buttons.add(credits, 1);
 
-        addComponents(text, welret);
-        window.setLayout(new GridLayout(3,3));
-    }
-}
-
-class play extends GUIStage implements ActionListener{
-    ArrayList<Question> questions;
-    JLabel prompt;
-    JLabel question;
-    JTextField answer;
-    JButton welret;
-
-
-    play(String path){
-        super("Play", new Dimension(1500,800));
-        //getjson(path);
-    }
-    @Override
-    void setWindow() {
-        prompt = new JLabel("");
-        question = new JLabel("");
-        answer = new JTextField();
-        welret = new JButton("Return to Welcome");
-
-        answer.addActionListener(this);
-        welret.addActionListener(this);
-
-        window.setLayout(new GridLayout(4,1));
-        window.add(prompt);
-        window.add(question);
-        window.add(answer);
-        window.add(welret);
-
-        window.setVisible(true);
-    }
-
-    private void getjson(String path){
-        try{
-            JSONArray file = (JSONArray) JSONValue.parse(Files.readString(FileSystems.getDefault().getPath(path)));
-            String prompt = (String)((JSONObject)file.get(0)).get("prompt");
-            questions.add(new Question(prompt, "hey", new ArrayList<String>(){{add("lol");}}));
-        }
-        catch (IOException e){
-            JOptionPane.showMessageDialog(window,
-                    "Cannot get file",
-                    "Error, file unopenable.",
-                    JOptionPane.ERROR_MESSAGE);
-            window.dispose();
-            new welcome();
-        }
+        window.setLayout(new BorderLayout());
+        window.add(text, BorderLayout.NORTH);
+        window.add(buttons, BorderLayout.SOUTH);
     }
 
     @Override
     public void actionPerformed(ActionEvent actionEvent) {
-        if (welret.equals(actionEvent.getSource())) {
-            window.dispose();
-            new welcome();
+        if (play.equals(actionEvent.getSource())){
+            window.removeAll();
+            new playScreen(window);
+        }
+        else if (credits.equals(actionEvent.getSource())){
+            window.removeAll();
+            new creditsScreen(window);
+        }
+
+    }
+}
+
+class creditsScreen extends GUIStage{
+    JLabel text;
+    JButton welcome;
+
+    creditsScreen(JFrame win) {
+        super(win, new Dimension(600,600), "Credits");
+    }
+
+    @Override
+    void initialise() {
+        text = new JLabel("Made by oliver killane hastily while learning java to distract from german");
+        welcome = new JButton("To Welcome screen.");
+
+        welcome.addActionListener(this);
+
+        window.setLayout(new BorderLayout());
+        window.add(text, BorderLayout.NORTH);
+        window.add(welcome, BorderLayout.SOUTH);
+
+        window.setVisible(true);
+        window.revalidate();
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent actionEvent) {
+        if (welcome.equals(actionEvent.getSource())){
+            new welcomeScreen(window);
         }
     }
 }
 
-final class Question{
-    String prompt;
-    String question;
-    ArrayList<String> answers;
+class playScreen extends GUIStage{
+    JLabel prompt;
+    JLabel question;
+    JPanel input;
+    JTextField entry;
+    JButton reveal;
+    JButton check;
+    JButton welcome;
 
-    Question(String p, String q, ArrayList<String> ans){
-        prompt = p;
-        question = q;
-        answers = ans;
+
+    playScreen(JFrame win) {
+        super(win, new Dimension(1200,600), "Play");
     }
+
+    @Override
+    void initialise() {
+        prompt = new JLabel("this is the prompt");
+        question = new JLabel("this is the question");
+
+        reveal = new JButton("reveal");
+        check = new JButton("check");
+        welcome = new JButton("welcome");
+
+        entry = new JTextField();
+
+        reveal.addActionListener(this);
+        check.addActionListener(this);
+        welcome.addActionListener(this);
+
+        input = new JPanel();
+        input.setLayout(new GridLayout(1, 3));
+
+        input.add(entry);
+        input.add(check);
+        input.add(reveal);
+
+        window.setLayout(new BorderLayout());
+        window.add(prompt, BorderLayout.NORTH);
+        window.add(question, BorderLayout.CENTER);
+        window.add(input, BorderLayout.SOUTH);
+
+        window.setVisible(true);
+        window.revalidate();
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent actionEvent) {
+        if (welcome.equals(actionEvent.getSource())){
+            new welcomeScreen(window);
+        }
+    }
+}
+
+class QuestionSet{
+    String prompt;
+    HashMap<String, ArrayList<String>> pairs;
 }
