@@ -19,7 +19,6 @@ abstract class GUIStage implements ActionListener {
         window.setSize(size);
         initialise();
         update();
-
     }
 
     abstract void initialise();
@@ -28,6 +27,14 @@ abstract class GUIStage implements ActionListener {
         window.revalidate();
         window.repaint();
         window.setVisible(true);
+    }
+
+    abstract void cleanscreen();
+
+    void clean(Component... comps){
+        for (Component comp : comps){
+            window.remove(comp);
+        }
     }
 }
 
@@ -63,13 +70,18 @@ class welcomeScreen extends GUIStage{
     }
 
     @Override
+    void cleanscreen(){
+        clean(play,credits,text,buttons);
+    }
+
+    @Override
     public void actionPerformed(ActionEvent actionEvent) {
         if (play.equals(actionEvent.getSource())){
-            window.removeAll();
+            cleanscreen();
             new playScreen(window);
         }
         else if (credits.equals(actionEvent.getSource())){
-            window.removeAll();
+            cleanscreen();
             new creditsScreen(window);
         }
 
@@ -100,8 +112,14 @@ class creditsScreen extends GUIStage{
     }
 
     @Override
+    void cleanscreen(){
+        clean(text, welcome);
+    }
+
+    @Override
     public void actionPerformed(ActionEvent actionEvent) {
         if (welcome.equals(actionEvent.getSource())){
+            cleanscreen();
             new welcomeScreen(window);
         }
     }
@@ -137,11 +155,12 @@ class playScreen extends GUIStage{
         welcome.addActionListener(this);
 
         input = new JPanel();
-        input.setLayout(new GridLayout(1, 3));
+        input.setLayout(new GridLayout(1, 4));
 
         input.add(entry);
         input.add(check);
         input.add(reveal);
+        input.add(welcome);
 
         window.setLayout(new BorderLayout());
         window.add(prompt, BorderLayout.NORTH);
@@ -153,8 +172,15 @@ class playScreen extends GUIStage{
     }
 
     @Override
+    void cleanscreen() {
+        clean(prompt, question, input, entry, reveal, check, welcome);
+    }
+
+
+    @Override
     public void actionPerformed(ActionEvent actionEvent) {
         if (welcome.equals(actionEvent.getSource())){
+            cleanscreen();
             new welcomeScreen(window);
         }
     }
