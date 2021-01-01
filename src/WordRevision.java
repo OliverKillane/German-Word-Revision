@@ -57,7 +57,7 @@ class welcomeScreen extends GUIStage {
     JPanel buttons;
 
     welcomeScreen(JFrame win) {
-        super(win, new Dimension(300, 300), "Welcome");
+        super(win, new Dimension(600, 600), "Welcome");
     }
 
     @Override
@@ -106,7 +106,7 @@ class fileSelectScreen extends GUIStage {
     JButton welcome;
 
     fileSelectScreen(JFrame win) {
-        super(win, new Dimension(600, 1200), "select file");
+        super(win, new Dimension(600, 600), "Select File");
     }
 
     @Override
@@ -153,11 +153,11 @@ class fileSelectScreen extends GUIStage {
             try {
                 QuestionSet qset = getQSet(getFile());
                 cleanscreen();
+                System.out.println("hey");
                 // BUG, nullpointerexception here - I think I fucked up on the JFileChooser bit.
                 new playScreen(window, qset);
             } catch (Exception e) {
-                System.out.println(e);
-                JOptionPane.showMessageDialog(window, "Please select a file.");
+                e.printStackTrace();
             }
         }
     }
@@ -175,6 +175,7 @@ class fileSelectScreen extends GUIStage {
         if (result == JFileChooser.APPROVE_OPTION) {
             return fileChooser.getSelectedFile().getAbsolutePath();
         } else {
+            // make this better, derive a new exception class you fool
             throw new Exception("No file selected");
         }
     }
@@ -190,7 +191,7 @@ class creditsScreen extends GUIStage {
 
     @Override
     void initialise() {
-        text = new JLabel("Made by oliver killane hastily while learning java to distract from german");
+        text = new JLabel("Made by oliver killane hastily while learning java to distract from german, also by the master of java Jordan Hall who blessed this code with his debugging genius.");
         welcome = new JButton("To Welcome screen.");
 
         welcome.addActionListener(this);
@@ -218,6 +219,7 @@ class playScreen extends GUIStage {
     JLabel prompt;
     JLabel question;
     JPanel input;
+    JPanel buttons;
     JTextField entry;
     JButton reveal;
     JButton check;
@@ -236,12 +238,15 @@ class playScreen extends GUIStage {
         qset = qs;
         qsize = qs.questions.size();
         randgen = new Random();
+
+        prompt.setText(qset.prompt);
+
         updateQuestion();
     }
 
     @Override
     void initialise() {
-        prompt = new JLabel(qset.prompt);
+        prompt = new JLabel("");
         question = new JLabel("this is the question");
 
         reveal = new JButton("reveal");
@@ -255,12 +260,17 @@ class playScreen extends GUIStage {
         welcome.addActionListener(this);
 
         input = new JPanel();
-        input.setLayout(new GridLayout(1, 4));
+        input.setLayout(new GridLayout(1, 2));
+
+        buttons = new JPanel();
+        buttons.setLayout(new GridLayout(3,1));
+
+        buttons.add(check);
+        buttons.add(reveal);
+        buttons.add(welcome);
 
         input.add(entry);
-        input.add(check);
-        input.add(reveal);
-        input.add(welcome);
+        input.add(buttons);
 
         window.setLayout(new BorderLayout());
         window.add(prompt, BorderLayout.NORTH);
