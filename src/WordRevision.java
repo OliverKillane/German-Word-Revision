@@ -1,15 +1,19 @@
-
 import com.google.gson.Gson;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Random;
+
+// Basic program, takes lists of questions and a prompt from a json file, uses a java swing UI to display them.
+// Transition between stages done by keeping a single JFrame (window) that is passed between objects which run each
+// stage of the GUI.
+
+// Gson used to turn JSON into objects because its easier than going with JSON.simple.
 
 public class WordRevision {
     public static void main(String[] args) {
@@ -17,6 +21,7 @@ public class WordRevision {
     }
 }
 
+// GUIStage runs main drawing functionality for each stage.
 abstract class GUIStage implements ActionListener {
     JFrame window;
 
@@ -50,7 +55,6 @@ class welcomeScreen extends GUIStage {
     JButton credits;
     JLabel text;
     JPanel buttons;
-
 
     welcomeScreen(JFrame win) {
         super(win, new Dimension(300, 300), "Welcome");
@@ -101,7 +105,6 @@ class fileSelectScreen extends GUIStage {
     JButton choosefile;
     JButton welcome;
 
-
     fileSelectScreen(JFrame win) {
         super(win, new Dimension(600, 1200), "select file");
     }
@@ -137,26 +140,21 @@ class fileSelectScreen extends GUIStage {
 
     @Override
     public void actionPerformed(ActionEvent actionEvent) {
-        if (welcome.equals(actionEvent.getSource())){
+        if (welcome.equals(actionEvent.getSource())) {
             cleanscreen();
             new welcomeScreen(window);
-        }
-        else if (infinitives.equals(actionEvent.getSource())){
+        } else if (infinitives.equals(actionEvent.getSource())) {
             //infinitives relative path
-        }
-        else if (verbs.equals(actionEvent.getSource())){
+        } else if (verbs.equals(actionEvent.getSource())) {
             //verbs relative path
-        }
-        else if (vocab1.equals(actionEvent.getSource())){
+        } else if (vocab1.equals(actionEvent.getSource())) {
             //vocab1 relative path
-        }
-        else if (choosefile.equals(actionEvent.getSource())){
+        } else if (choosefile.equals(actionEvent.getSource())) {
             try {
                 QuestionSet qset = getQSet(getFile());
-                System.out.println(qset.prompt);
                 cleanscreen();
-                System.out.println("shit");
-                new playScreen(window,qset);
+                // BUG, nullpointerexception here - I think I fucked up on the JFileChooser bit.
+                new playScreen(window, qset);
             } catch (Exception e) {
                 System.out.println(e);
                 JOptionPane.showMessageDialog(window, "Please select a file.");
@@ -166,9 +164,7 @@ class fileSelectScreen extends GUIStage {
 
     QuestionSet getQSet(String path) throws IOException {
         String source = Files.readString(Paths.get(path));
-
         Gson gson = new Gson();
-
         return gson.fromJson(source, QuestionSet.class);
     }
 
@@ -236,7 +232,7 @@ class playScreen extends GUIStage {
 
     playScreen(JFrame win, QuestionSet qs) {
         super(win, new Dimension(1200, 600), "Play");
-        System.out.println("shit2");
+        // Cannot reach here
         qset = qs;
         qsize = qs.questions.size();
         randgen = new Random();
@@ -297,7 +293,7 @@ class playScreen extends GUIStage {
         }
     }
 
-    void updateQuestion(){
+    void updateQuestion() {
         current = qset.questions.get(randgen.nextInt(qsize));
 
         question.setText(current.question);
@@ -306,22 +302,20 @@ class playScreen extends GUIStage {
         update();
     }
 
-    void checkQuestion(){
-        if (current.answers.contains(entry.getText().toLowerCase().trim())){
+    void checkQuestion() {
+        if (current.answers.contains(entry.getText().toLowerCase().trim())) {
             updateQuestion();
-        }
-        else {
+        } else {
             JOptionPane.showMessageDialog(window, "Incorrect");
         }
     }
 
-    void revealQuestion(){
+    void revealQuestion() {
         entry.setText(current.answers.get(0));
     }
 }
 
 
-// TODO, create questionsets
 class Question {
     String question;
     ArrayList<String> answers;
