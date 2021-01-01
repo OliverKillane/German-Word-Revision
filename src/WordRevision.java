@@ -1,8 +1,15 @@
+
+import com.google.gson.Gson;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.HashMap;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Random;
 
 public class WordRevision {
     public static void main(String[] args) {
@@ -13,7 +20,7 @@ public class WordRevision {
 abstract class GUIStage implements ActionListener {
     JFrame window;
 
-    GUIStage (JFrame win, Dimension size, String title){
+    GUIStage(JFrame win, Dimension size, String title) {
         window = win;
         window.setTitle(title);
         window.setSize(size);
@@ -23,7 +30,7 @@ abstract class GUIStage implements ActionListener {
 
     abstract void initialise();
 
-    void update(){
+    void update() {
         window.revalidate();
         window.repaint();
         window.setVisible(true);
@@ -31,14 +38,14 @@ abstract class GUIStage implements ActionListener {
 
     abstract void cleanscreen();
 
-    void clean(Component... comps){
-        for (Component comp : comps){
+    void clean(Component... comps) {
+        for (Component comp : comps) {
             window.remove(comp);
         }
     }
 }
 
-class welcomeScreen extends GUIStage{
+class welcomeScreen extends GUIStage {
     JButton play;
     JButton credits;
     JLabel text;
@@ -46,7 +53,7 @@ class welcomeScreen extends GUIStage{
 
 
     welcomeScreen(JFrame win) {
-        super(win, new Dimension(300,300), "Welcome");
+        super(win, new Dimension(300, 300), "Welcome");
     }
 
     @Override
@@ -60,7 +67,7 @@ class welcomeScreen extends GUIStage{
         play.addActionListener(this);
         credits.addActionListener(this);
 
-        buttons.setLayout(new GridLayout(1,2));
+        buttons.setLayout(new GridLayout(1, 2));
         buttons.add(play, 0);
         buttons.add(credits, 1);
 
@@ -70,30 +77,119 @@ class welcomeScreen extends GUIStage{
     }
 
     @Override
-    void cleanscreen(){
-        clean(play,credits,text,buttons);
+    void cleanscreen() {
+        clean(play, credits, text, buttons);
     }
 
     @Override
     public void actionPerformed(ActionEvent actionEvent) {
-        if (play.equals(actionEvent.getSource())){
+        if (play.equals(actionEvent.getSource())) {
             cleanscreen();
-            new playScreen(window);
-        }
-        else if (credits.equals(actionEvent.getSource())){
+            new fileSelectScreen(window);
+        } else if (credits.equals(actionEvent.getSource())) {
             cleanscreen();
             new creditsScreen(window);
         }
-
     }
 }
 
-class creditsScreen extends GUIStage{
+class fileSelectScreen extends GUIStage {
+    JLabel text;
+    JButton infinitives;
+    JButton verbs;
+    JButton vocab1;
+    JButton choosefile;
+    JButton welcome;
+
+
+    fileSelectScreen(JFrame win) {
+        super(win, new Dimension(600, 1200), "select file");
+    }
+
+    @Override
+    void initialise() {
+        text = new JLabel("Shortcuts");
+        infinitives = new JButton("Infinitive verbs.");
+        verbs = new JButton("Verb Conjugations");
+        vocab1 = new JButton("Vocab list 1");
+        choosefile = new JButton("Choose file");
+        welcome = new JButton("Welcome screen");
+
+        infinitives.addActionListener(this);
+        verbs.addActionListener(this);
+        vocab1.addActionListener(this);
+        choosefile.addActionListener(this);
+        welcome.addActionListener(this);
+
+        window.setLayout(new GridLayout(6, 1));
+        window.add(text);
+        window.add(infinitives);
+        window.add(verbs);
+        window.add(vocab1);
+        window.add(choosefile);
+        window.add(welcome);
+    }
+
+    @Override
+    void cleanscreen() {
+        clean(text, infinitives, verbs, vocab1, choosefile, welcome);
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent actionEvent) {
+        if (welcome.equals(actionEvent.getSource())){
+            cleanscreen();
+            new welcomeScreen(window);
+        }
+        else if (infinitives.equals(actionEvent.getSource())){
+            //infinitives relative path
+        }
+        else if (verbs.equals(actionEvent.getSource())){
+            //verbs relative path
+        }
+        else if (vocab1.equals(actionEvent.getSource())){
+            //vocab1 relative path
+        }
+        else if (choosefile.equals(actionEvent.getSource())){
+            try {
+                QuestionSet qset = getQSet(getFile());
+                System.out.println(qset.prompt);
+                cleanscreen();
+                System.out.println("shit");
+                new playScreen(window,qset);
+            } catch (Exception e) {
+                System.out.println(e);
+                JOptionPane.showMessageDialog(window, "Please select a file.");
+            }
+        }
+    }
+
+    QuestionSet getQSet(String path) throws IOException {
+        String source = Files.readString(Paths.get(path));
+
+        Gson gson = new Gson();
+
+        return gson.fromJson(source, QuestionSet.class);
+    }
+
+    String getFile() throws Exception {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setCurrentDirectory(new File(System.getProperty("user.home")));
+        int result = fileChooser.showOpenDialog(window);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            return fileChooser.getSelectedFile().getAbsolutePath();
+        } else {
+            throw new Exception("No file selected");
+        }
+    }
+}
+
+class creditsScreen extends GUIStage {
     JLabel text;
     JButton welcome;
 
     creditsScreen(JFrame win) {
-        super(win, new Dimension(600,600), "Credits");
+        super(win, new Dimension(600, 600), "Credits");
     }
 
     @Override
@@ -106,26 +202,23 @@ class creditsScreen extends GUIStage{
         window.setLayout(new BorderLayout());
         window.add(text, BorderLayout.NORTH);
         window.add(welcome, BorderLayout.SOUTH);
-
-        window.setVisible(true);
-        window.revalidate();
     }
 
     @Override
-    void cleanscreen(){
+    void cleanscreen() {
         clean(text, welcome);
     }
 
     @Override
     public void actionPerformed(ActionEvent actionEvent) {
-        if (welcome.equals(actionEvent.getSource())){
+        if (welcome.equals(actionEvent.getSource())) {
             cleanscreen();
             new welcomeScreen(window);
         }
     }
 }
 
-class playScreen extends GUIStage{
+class playScreen extends GUIStage {
     JLabel prompt;
     JLabel question;
     JPanel input;
@@ -134,14 +227,25 @@ class playScreen extends GUIStage{
     JButton check;
     JButton welcome;
 
+    QuestionSet qset;
+    Question current;
+    int qsize;
 
-    playScreen(JFrame win) {
-        super(win, new Dimension(1200,600), "Play");
+    Random randgen;
+
+
+    playScreen(JFrame win, QuestionSet qs) {
+        super(win, new Dimension(1200, 600), "Play");
+        System.out.println("shit2");
+        qset = qs;
+        qsize = qs.questions.size();
+        randgen = new Random();
+        updateQuestion();
     }
 
     @Override
     void initialise() {
-        prompt = new JLabel("this is the prompt");
+        prompt = new JLabel(qset.prompt);
         question = new JLabel("this is the question");
 
         reveal = new JButton("reveal");
@@ -179,14 +283,51 @@ class playScreen extends GUIStage{
 
     @Override
     public void actionPerformed(ActionEvent actionEvent) {
-        if (welcome.equals(actionEvent.getSource())){
+        if (welcome.equals(actionEvent.getSource())) {
             cleanscreen();
             new welcomeScreen(window);
         }
+
+        if (reveal.equals(actionEvent.getSource())) {
+            revealQuestion();
+        }
+
+        if (check.equals(actionEvent.getSource())) {
+            checkQuestion();
+        }
+    }
+
+    void updateQuestion(){
+        current = qset.questions.get(randgen.nextInt(qsize));
+
+        question.setText(current.question);
+        entry.setText("");
+
+        update();
+    }
+
+    void checkQuestion(){
+        if (current.answers.contains(entry.getText().toLowerCase().trim())){
+            updateQuestion();
+        }
+        else {
+            JOptionPane.showMessageDialog(window, "Incorrect");
+        }
+    }
+
+    void revealQuestion(){
+        entry.setText(current.answers.get(0));
     }
 }
 
-class QuestionSet{
+
+// TODO, create questionsets
+class Question {
+    String question;
+    ArrayList<String> answers;
+}
+
+class QuestionSet {
     String prompt;
-    HashMap<String, ArrayList<String>> pairs;
+    ArrayList<Question> questions;
 }
