@@ -325,7 +325,6 @@ class playScreen extends GUIStage {
     }
 }
 
-
 class Question {
     String question;
     ArrayList<String> answers;
