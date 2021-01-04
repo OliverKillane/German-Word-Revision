@@ -66,7 +66,7 @@ class welcomeScreen extends GUIStage {
 
         play = new JButton("Start revising");
         credits = new JButton("credits");
-        text = new JLabel("welcome to German revision");
+        text = new JLabel("<html><font size=+8>welcome to german revision</font>", JLabel.CENTER);
 
         play.addActionListener(this);
         credits.addActionListener(this);
@@ -154,7 +154,6 @@ class fileSelectScreen extends GUIStage {
                 QuestionSet qset = getQSet(getFile());
                 cleanscreen();
                 System.out.println("hey");
-                // BUG, nullpointerexception here - I think I fucked up on the JFileChooser bit.
                 new playScreen(window, qset);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -246,14 +245,15 @@ class playScreen extends GUIStage {
 
     @Override
     void initialise() {
-        prompt = new JLabel("");
-        question = new JLabel("this is the question");
+        prompt = new JLabel("",JLabel.CENTER);
+        question = new JLabel("",JLabel.CENTER);
 
         reveal = new JButton("reveal");
         check = new JButton("check");
         welcome = new JButton("welcome");
 
         entry = new JTextField();
+        entry.addActionListener(this);
 
         reveal.addActionListener(this);
         check.addActionListener(this);
@@ -290,8 +290,21 @@ class playScreen extends GUIStage {
     @Override
     public void actionPerformed(ActionEvent actionEvent) {
         if (welcome.equals(actionEvent.getSource())) {
-            cleanscreen();
-            new welcomeScreen(window);
+
+            Object[] options = {"Yes, please",
+                                "No way!"};
+            int selected = JOptionPane.showOptionDialog(window,
+                    "Are you sure you want to quit?",
+                    "Exit revision session",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE,
+                    null,     //do not use a custom Icon
+                    options,  //the titles of buttons
+                    options[0]); //default button title
+            if (selected == 0){
+                cleanscreen();
+                new welcomeScreen(window);
+            }
         }
 
         if (reveal.equals(actionEvent.getSource())) {
@@ -301,12 +314,15 @@ class playScreen extends GUIStage {
         if (check.equals(actionEvent.getSource())) {
             checkQuestion();
         }
+        else if (entry.equals(actionEvent.getSource())){
+            checkQuestion();
+        }
     }
 
     void updateQuestion() {
         current = qset.questions.get(randgen.nextInt(qsize));
 
-        question.setText(current.question);
+        question.setText("<html><font size=+8>"+ current.question +"</font>");
         entry.setText("");
 
         update();
